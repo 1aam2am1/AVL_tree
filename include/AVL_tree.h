@@ -385,11 +385,18 @@ AVL_tree<U, T>::~AVL_tree() {
 
 template<typename U, typename T>
 int AVL_tree<U, T>::height(node <U, T> *node) const {
-    if (node == nullptr) {
-        return 0;
+    int32_t height = 0;
+
+    while (node) {
+        height += 1;
+        if (node->bf <= 0) {
+            node = node->left;
+        } else {
+            node = node->right;
+        }
     }
 
-    return std::max<int>(height(node->left), height(node->right)) + 1;
+    return height;
 }
 
 template<typename U, typename T>

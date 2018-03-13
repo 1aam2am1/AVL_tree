@@ -10,7 +10,7 @@
 
 template<typename T>
 struct node {
-    node() = default;
+    node() = delete;
 
     explicit node(T &&value);
 
@@ -20,7 +20,7 @@ struct node {
     node *left;
     node *right;
     node *parent;
-    int bf;
+    int bf{};
 };
 
 template<typename T>

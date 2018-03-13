@@ -2,8 +2,8 @@
 // Created by MacBook on 10.03.2018.
 //
 
-#ifndef AVL_TREE_PRE_ORDER_ITRATOR_H
-#define AVL_TREE_PRE_ORDER_ITRATOR_H
+#ifndef AVL_TREE_PRE_ORDER_ITERATOR_H
+#define AVL_TREE_PRE_ORDER_ITERATOR_H
 
 #include <iterator>
 #include "node.h"
@@ -13,7 +13,7 @@ class pre_order_iterator : std::iterator<std::input_iterator_tag, T> {
 public:
     constexpr pre_order_iterator() : node(nullptr) {}
 
-    explicit pre_order_iterator(node<T> *node) : node(node) {}
+    explicit pre_order_iterator(const node<T> *node) : node(node) {}
 
     const T &operator*() const { return node->value; }
 
@@ -60,7 +60,7 @@ public:
     bool operator!=(const pre_order_iterator &__x, const pre_order_iterator &__y) { return !(__x == __y); }
 
 private:
-    node<T> *node;
+    const node<T> *node;
 };
 
-#endif //AVL_TREE_PRE_ORDER_ITRATOR_H
+#endif //AVL_TREE_PRE_ORDER_ITERATOR_H

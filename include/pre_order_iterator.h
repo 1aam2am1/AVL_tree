@@ -15,9 +15,9 @@ public:
 
     explicit pre_order_iterator(const node<U, T> *node) : node(node) {}
 
-    const T &operator*() const { return node->value; }
+    const std::pair<U, T> &operator*() const { return node->pair; }
 
-    const T *operator->() const { return &node->value; }
+    const std::pair<U, T> *operator->() const { return &node->pair; }
 
     pre_order_iterator &operator++() {
         if (node->left) {

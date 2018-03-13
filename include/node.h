@@ -22,8 +22,9 @@ struct node {
 
     explicit node(const U &key, const T &value);
 
-    U key;
-    T value;
+    std::pair<U, T> pair;
+    U &key;
+    T &value;
     node *left;
     node *right;
     node *parent;
@@ -38,23 +39,24 @@ struct node {
 };
 
 template<typename U, typename T>
-node<U, T>::node(U key):key(key), value(), parent(nullptr),
+node<U, T>::node(U key):pair(key, {}), key(pair.first), value(pair.second), parent(nullptr),
                         left(nullptr), right(nullptr), bf(0) {}
 
 template<typename U, typename T>
-node<U, T>::node(U &&key):key(std::forward(key)), value(), parent(nullptr),
+node<U, T>::node(U &&key):pair(std::forward(key), {}), key(pair.first), value(pair.second), parent(nullptr),
                           left(nullptr), right(nullptr), bf(0) {}
 
 template<typename U, typename T>
-node<U, T>::node(U key, T &&value):key(key), value(std::forward(value)), parent(nullptr),
+node<U, T>::node(U key, T &&value):pair(key, std::forward(value)), key(pair.first), value(pair.second), parent(nullptr),
                                    left(nullptr), right(nullptr), bf(0) {}
 
 template<typename U, typename T>
-node<U, T>::node(U &&key, T &&value):key(std::forward(key)), value(std::forward(value)), parent(nullptr),
+node<U, T>::node(U &&key, T &&value):pair(std::forward(key), std::forward(value)), key(pair.first), value(pair.second),
+                                     parent(nullptr),
                                      left(nullptr), right(nullptr), bf(0) {}
 
 template<typename U, typename T>
-node<U, T>::node(const U &key, const T &value):key(key), value(value), parent(nullptr),
+node<U, T>::node(const U &key, const T &value):pair(key, value), key(pair.first), value(pair.second), parent(nullptr),
                                                left(nullptr), right(nullptr), bf(0) {}
 
 

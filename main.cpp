@@ -14,7 +14,7 @@ int main() {
     m.print();
 
     for (auto i : m) {
-        printf("%i ", i);
+        printf("%i ", i.first);
     }
 
     for (int32_t i = 2000; i > 500; i -= 3) {

@@ -20,9 +20,9 @@ public:
         this->node = node;
     }
 
-    const T &operator*() const { return node->value; }
+    const std::pair<U, T> &operator*() const { return node->pair; }
 
-    const T *operator->() const { return &node->value; }
+    const std::pair<U, T> *operator->() const { return &node->pair; }
 
     post_order_iterator &operator++() {
         if (node->parent) {

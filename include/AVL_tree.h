@@ -12,77 +12,87 @@
 #include "post_order_iterator.h"
 
 
-template<typename T>
+template<typename U, typename T>
 class AVL_tree {
 public:
     AVL_tree();
 
     virtual ~AVL_tree();
 
-    void print(const std::function<void(const T &)> & = [](const T &v) -> void {
-        std::cout << v;
+    void print(const std::function<void(const U &, const T &)> & = [](const U &k, const T &v) -> void {
+        std::cout << k << " " << v;
         std::cout.flush();
     }) const;
 
-    void push(const T &);
+    T &at(const U &key) throw(std::exception);
 
-    void push(T &&);
+    const T &at(const U &key) const throw(std::exception);
 
-    void remove(const T &);
+    T &operator[](const U &key);
 
-    bool check() const;
+    T &operator[](U &&key);
+
+    template<template<typename, typename> class I = in_order_iterator>
+    I<U, T> begin() const { return I<U, T>(this->root); }
+
+    template<template<typename, typename> class I = in_order_iterator>
+    I<U, T> end() const { return I<U, T>(); }
+
+    bool empty() const;
+
+    int size() const;
+
+    void clear();
+
+    std::size_t erase(const U &key);
 
     int height() const;
 
-    template<template<typename> class U = in_order_iterator>
-    U<T> begin() const { return U<T>(this->root); }
-
-    template<template<typename> class U = in_order_iterator>
-    U<T> end() const { return U<T>(); }
-
 private:
-    node<T> *root;
+    node<U, T> *root;
+    int32_t m_size;
 
-    void print(node<T> *, const std::string &, int,
-               const std::function<void(const T &)> &) const;
+    void print(node<U, T> *, const std::string &, int,
+               const std::function<void(const U &, const T &)> &) const;
 
-    void push(node<T> *);
+    void bf(node<U, T> *node);
 
-    void take_out(node<T> *&);
+    void take_out(node<U, T> *&);
 
-    void bf_recalculate_down(node<T> *);
+    void bf_recalculate_down(node<U, T> *);
 
-    int height(node<T> *) const;
+    int height(node<U, T> *) const;
 
-    int how_height(node<T> *) const;
+    int how_height(node<U, T> *) const;
 
-    bool check(node<T> *) const;
+    void rr(node<U, T> *);
 
-    void rr(node<T> *);
+    void rl(node<U, T> *);
 
-    void rl(node<T> *);
+    void ll(node<U, T> *);
 
-    void ll(node<T> *);
+    void lr(node<U, T> *);
 
-    void lr(node<T> *);
+    node<U, T> *find(const U &) const;
+
 };
 
-template<typename T>
-AVL_tree<T>::AVL_tree(): root(nullptr) {}
+template<typename U, typename T>
+AVL_tree<U, T>::AVL_tree(): root(nullptr), m_size(0) {}
 
 
-template<typename T>
-void AVL_tree<T>::print(const std::function<void(const T &)> &display) const {
+template<typename U, typename T>
+void AVL_tree<U, T>::print(const std::function<void(const U &, const T &)> &display) const {
     if (this->root) {
         this->print(this->root, "  ", 0, display);
     }
     printf("\n");
 }
 
-template<typename T>
+template<typename U, typename T>
 void
-AVL_tree<T>::print(node<T> *node, const std::string &str, int side,
-                   const std::function<void(const T &)> &display) const {
+AVL_tree<U, T>::print(node<U, T> *node, const std::string &str, int side,
+                      const std::function<void(const U &, const T &)> &display) const {
 
     if (node) {
         std::string s = str;
@@ -94,7 +104,7 @@ AVL_tree<T>::print(node<T> *node, const std::string &str, int side,
         s = s.substr(0, str.length() - 2);
         printf("%s##:%i ", s.c_str(), node->bf);
         fflush(stdout);
-        display(node->value);
+        display(node->key, node->value);
         printf(" - %i\n", this->how_height(node));
 
         s = str;
@@ -105,52 +115,15 @@ AVL_tree<T>::print(node<T> *node, const std::string &str, int side,
     }
 }
 
-template<typename T>
-void AVL_tree<T>::push(const T &x) {
-    auto *node = new ::node<T>(x);
+template<typename U, typename T>
+void AVL_tree<U, T>::bf(node <U, T> *node) {
 
-    this->push(node);
-}
-
-template<typename T>
-void AVL_tree<T>::push(T &&x) {
-    auto *node = new ::node<T>(x);
-
-    this->push(node);
-}
-
-template<typename T>
-void AVL_tree<T>::push(node <T> *node) {
-    if (this->root == nullptr) {
-        this->root = node;
+    this->m_size += 1;
+    if (!node->parent) {
         return;
     }
 
-    auto *p = this->root;
-    do {
-        if (p->value > node->value) {
-            if (p->left) {
-                p = p->left;
-            } else {
-                p->left = node;
-                break;
-            }
-        } else if (p->value < node->value) {
-            if (p->right) {
-                p = p->right;
-            } else {
-                p->right = node;
-                break;
-            }
-        } else {
-            delete node;
-            return;
-        }
-    } while (true);
-    node->parent = p; //parent
-
-    //bf
-    p = node;
+    auto p = node;
     do {
 
         if (p->parent->right == p) {
@@ -181,24 +154,8 @@ void AVL_tree<T>::push(node <T> *node) {
     } while (p->parent);
 }
 
-template<typename T>
-void AVL_tree<T>::remove(const T &value) {
-    auto *node = this->root;
-    while (node) {
-        if (node->value == value) {
-            take_out(node);
-            delete node;
-            break;
-        } else if (node->value < value) {
-            node = node->right;
-        } else {
-            node = node->left;
-        }
-    }
-}
-
-template<typename T>
-void AVL_tree<T>::rr(node <T> *A) {
+template<typename U, typename T>
+void AVL_tree<U, T>::rr(node <U, T> *A) {
     auto B = A->right;
     auto p = A->parent;
 
@@ -227,8 +184,8 @@ void AVL_tree<T>::rr(node <T> *A) {
     }
 }
 
-template<typename T>
-void AVL_tree<T>::rl(node <T> *A) {
+template<typename U, typename T>
+void AVL_tree<U, T>::rl(node <U, T> *A) {
     auto B = A->right;
     auto C = B->left;
     auto p = A->parent;
@@ -268,8 +225,8 @@ void AVL_tree<T>::rl(node <T> *A) {
     C->bf = 0;
 }
 
-template<typename T>
-void AVL_tree<T>::ll(node <T> *A) {
+template<typename U, typename T>
+void AVL_tree<U, T>::ll(node <U, T> *A) {
     auto B = A->left;
     auto p = A->parent;
 
@@ -298,8 +255,8 @@ void AVL_tree<T>::ll(node <T> *A) {
     }
 }
 
-template<typename T>
-void AVL_tree<T>::lr(node <T> *A) {
+template<typename U, typename T>
+void AVL_tree<U, T>::lr(node <U, T> *A) {
     auto B = A->left;
     auto C = B->right;
     auto p = A->parent;
@@ -339,11 +296,11 @@ void AVL_tree<T>::lr(node <T> *A) {
     C->bf = 0;
 }
 
-template<typename T>
-void AVL_tree<T>::take_out(node <T> *&node) {
+template<typename U, typename T>
+void AVL_tree<U, T>::take_out(node <U, T> *&node) {
 
     if (node->left && node->right) {
-        ::node<T> *take;
+        ::node<U, T> *take;
 
         take = node->left;
         while (take->right) {
@@ -421,34 +378,13 @@ void AVL_tree<T>::take_out(node <T> *&node) {
     node->parent = nullptr;
 }
 
-template<typename T>
-AVL_tree<T>::~AVL_tree() {
-    while (true) {
-        if (this->root->left) {
-            this->root = this->root->left;
-        } else if (this->root->right) {
-            this->root = this->root->right;
-        } else {
-            if (this->root->parent) {
-                auto *p = this->root->parent;
-                if (p->left == this->root) {
-                    p->left = nullptr;
-                } else {
-                    p->right = nullptr;
-                }
-                delete this->root;
-                this->root = p;
-            } else {
-                delete this->root;
-                this->root = nullptr;
-                break;
-            }
-        }
-    }
+template<typename U, typename T>
+AVL_tree<U, T>::~AVL_tree() {
+    this->clear();
 }
 
-template<typename T>
-int AVL_tree<T>::height(node <T> *node) const {
+template<typename U, typename T>
+int AVL_tree<U, T>::height(node <U, T> *node) const {
     if (node == nullptr) {
         return 0;
     }
@@ -456,62 +392,13 @@ int AVL_tree<T>::height(node <T> *node) const {
     return std::max<int>(height(node->left), height(node->right)) + 1;
 }
 
-template<typename T>
-bool AVL_tree<T>::check() const {
-
-
-    return check(this->root) && this->root->parent == nullptr;
-}
-
-template<typename T>
-int AVL_tree<T>::height() const {
+template<typename U, typename T>
+int AVL_tree<U, T>::height() const {
     return height(this->root);
 }
 
-template<typename T>
-bool AVL_tree<T>::check(node <T> *node) const {
-    int bf2 = 0;
-    if (node->left) {
-        if (node->left->parent != node) {
-            printf("Bad parent\n");
-            return false;
-        }
-
-        if (!check(node->left)) {
-            return false;
-        }
-        bf2 -= height(node->left);
-    }
-    if (node->right) {
-        if (node->right->parent != node) {
-            printf("Bad parent\n");
-            return false;
-        }
-
-        if (!check(node->right)) {
-            return false;
-        }
-        bf2 += height(node->right);
-    }
-    if (!(node->left || node->right)) {
-        if (node->bf != 0) {
-            printf("Bad end of bf\n");
-            return false;
-        }
-    }
-
-    if (bf2 != node->bf) {
-        printf("Bad bf:%i\n", node->value);
-        return false;
-    }
-
-    return true;
-
-
-}
-
-template<typename T>
-void AVL_tree<T>::bf_recalculate_down(node <T> *node) {
+template<typename U, typename T>
+void AVL_tree<U, T>::bf_recalculate_down(node <U, T> *node) {
 
     auto p = node->parent;
 
@@ -539,8 +426,8 @@ void AVL_tree<T>::bf_recalculate_down(node <T> *node) {
     }
 }
 
-template<typename T>
-int AVL_tree<T>::how_height(node <T> *node) const {
+template<typename U, typename T>
+int AVL_tree<U, T>::how_height(node <U, T> *node) const {
 
     int32_t i = 0;
 
@@ -550,6 +437,173 @@ int AVL_tree<T>::how_height(node <T> *node) const {
     }
 
     return i;
+}
+
+template<typename U, typename T>
+T &AVL_tree<U, T>::at(const U &key) throw(std::exception) {
+    auto node = find(key);
+    if (node) {
+        return node->value;
+    } else {
+        throw std::runtime_error("Out of range");
+    }
+}
+
+template<typename U, typename T>
+const T &AVL_tree<U, T>::at(const U &key) const throw(std::exception) {
+    auto node = find(key);
+    if (node) {
+        return node->value;
+    } else {
+        throw std::runtime_error("Out of range");
+    }
+}
+
+template<typename U, typename T>
+T &AVL_tree<U, T>::operator[](const U &key) {
+    auto node = this->root;
+
+    if (!node) {
+        this->root = new ::node<U, T>(key);
+        bf(this->root);
+        return this->root->value;
+    }
+
+    while (true) {
+        if (node->key > key) {
+            if (node->left) {
+                node = node->left;
+            } else {
+                node->left = new ::node<U, T>(key);
+                node->left->parent = node;
+                bf(node->left);
+                return node->left->value;
+            }
+        } else if (node->key < key) {
+            if (node->right) {
+                node = node->right;
+            } else {
+                node->right = new ::node<U, T>(key);
+                node->right->parent = node;
+                bf(node->right);
+                return node->right->value;
+            }
+        } else {
+            return node->value;
+        }
+    }
+}
+
+template<typename U, typename T>
+T &AVL_tree<U, T>::operator[](U &&key) {
+    auto node = this->root;
+
+    if (!node) {
+        this->root = new ::node<U, T>(key);
+        bf(this->root);
+        return this->root->value;
+    }
+
+    while (true) {
+        if (node->key > key) {
+            if (node->left) {
+                node = node->left;
+            } else {
+                node->left = new ::node<U, T>(key);
+                node->left->parent = node;
+                bf(node->left);
+                return node->left->value;
+            }
+        } else if (node->key < key) {
+            if (node->right) {
+                node = node->right;
+            } else {
+                node->right = new ::node<U, T>(key);
+                node->right->parent = node;
+                bf(node->right);
+                return node->right->value;
+            }
+        } else {
+            return node->value;
+        }
+    }
+}
+
+template<typename U, typename T>
+bool AVL_tree<U, T>::empty() const {
+    return this->root == nullptr;
+}
+
+template<typename U, typename T>
+int AVL_tree<U, T>::size() const {
+    return this->m_size;
+}
+
+template<typename U, typename T>
+void AVL_tree<U, T>::clear() {
+    while (true) {
+        if (this->root->left) {
+            this->root = this->root->left;
+        } else if (this->root->right) {
+            this->root = this->root->right;
+        } else {
+            if (this->root->parent) {
+                auto *p = this->root->parent;
+                if (p->left == this->root) {
+                    p->left = nullptr;
+                } else {
+                    p->right = nullptr;
+                }
+                delete this->root;
+                this->root = p;
+            } else {
+                delete this->root;
+                this->root = nullptr;
+                break;
+            }
+        }
+    }
+    this->root = nullptr;
+    this->m_size = 0;
+}
+
+template<typename U, typename T>
+std::size_t AVL_tree<U, T>::erase(const U &key) {
+
+    auto node = find(key);
+    if (node) {
+        take_out(node);
+        delete node;
+        this->m_size -= 1;
+        return 1;
+    }
+
+    return 0;
+}
+
+template<typename U, typename T>
+node<U, T> *AVL_tree<U, T>::find(const U &key) const {
+
+    auto node = this->root;
+    while (true) {
+        if (node->key > key) {
+            if (node->left) {
+                node = node->left;
+            } else {
+                break;
+            }
+        } else if (node->key < key) {
+            if (node->right) {
+                node = node->right;
+            } else {
+                break;
+            }
+        } else {
+            return node;
+        }
+    }
+
+    return nullptr;
 }
 
 

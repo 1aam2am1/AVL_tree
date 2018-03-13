@@ -5,17 +5,10 @@
 #include "AVL_tree.h"
 
 int main() {
-    AVL_tree<int> m;
+    AVL_tree<int, int> m;
 
     for (int32_t i = 0; i < 20; ++i) {
-        m.push(i);
-
-        if (!m.check()) {
-            m.print();
-            printf("%i\n", i);
-            printf("ERROR");
-            return 0;
-        }
+        m[i] = i;
     }
 
     m.print();
@@ -25,14 +18,7 @@ int main() {
     }
 
     for (int32_t i = 2000; i > 500; i -= 3) {
-        m.remove(i);
-
-        if (!m.check()) {
-            m.print();
-            printf("%i\n", i);
-            printf("ERROR");
-            return 0;
-        }
+        m.erase(i);
     }
 
 

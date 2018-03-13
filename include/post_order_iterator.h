@@ -8,12 +8,12 @@
 #include <iterator>
 #include "node.h"
 
-template<typename T>
+template<typename U, typename T>
 class post_order_iterator : std::iterator<std::input_iterator_tag, T> {
 public:
     constexpr post_order_iterator() : node(nullptr) {}
 
-    explicit post_order_iterator(const node<T> *node) {
+    explicit post_order_iterator(const node<U, T> *node) {
         while (node->left) {
             node = node->left;
         }
@@ -57,7 +57,7 @@ public:
     bool operator!=(const post_order_iterator &__x, const post_order_iterator &__y) { return !(__x == __y); }
 
 private:
-    const node<T> *node;
+    const node<U, T> *node;
 };
 
 #endif //AVL_TREE_POST_ORDER_ITERATOR_H

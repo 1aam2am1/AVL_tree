@@ -8,12 +8,12 @@
 #include <iterator>
 #include "node.h"
 
-template<typename T>
+template<typename U, typename T>
 class pre_order_iterator : std::iterator<std::input_iterator_tag, T> {
 public:
     constexpr pre_order_iterator() : node(nullptr) {}
 
-    explicit pre_order_iterator(const node<T> *node) : node(node) {}
+    explicit pre_order_iterator(const node<U, T> *node) : node(node) {}
 
     const T &operator*() const { return node->value; }
 
@@ -60,7 +60,7 @@ public:
     bool operator!=(const pre_order_iterator &__x, const pre_order_iterator &__y) { return !(__x == __y); }
 
 private:
-    const node<T> *node;
+    const node<U, T> *node;
 };
 
 #endif //AVL_TREE_PRE_ORDER_ITERATOR_H

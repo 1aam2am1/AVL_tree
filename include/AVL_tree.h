@@ -42,8 +42,6 @@ public:
 
     int size() const;
 
-    void clear();
-
     std::size_t erase(const U &key);
 
     int height() const;
@@ -51,6 +49,7 @@ public:
 private:
     node<U, T> *root;
     int32_t m_size;
+    int32_t m_height;
 
     void print(node<U, T> *, const std::string &, int,
                const std::function<void(const U &, const T &)> &) const;
@@ -60,8 +59,6 @@ private:
     void take_out(node<U, T> *&);
 
     void bf_recalculate_down(node<U, T> *);
-
-    int height(node<U, T> *) const;
 
     int how_height(node<U, T> *) const;
 
@@ -78,7 +75,7 @@ private:
 };
 
 template<typename U, typename T>
-AVL_tree<U, T>::AVL_tree(): root(nullptr), m_size(0) {}
+AVL_tree<U, T>::AVL_tree(): root(nullptr), m_size(0), m_height(0) {}
 
 
 template<typename U, typename T>
@@ -120,6 +117,7 @@ void AVL_tree<U, T>::bf(node <U, T> *node) {
 
     this->m_size += 1;
     if (!node->parent) {
+        m_height = 1;
         return;
     }
 
@@ -152,6 +150,10 @@ void AVL_tree<U, T>::bf(node <U, T> *node) {
             break;
         }
     } while (p->parent);
+
+    if (!p->parent && p->bf != 0) {
+        m_height += 1;
+    }
 }
 
 template<typename U, typename T>
@@ -380,28 +382,36 @@ void AVL_tree<U, T>::take_out(node <U, T> *&node) {
 
 template<typename U, typename T>
 AVL_tree<U, T>::~AVL_tree() {
-    this->clear();
-}
-
-template<typename U, typename T>
-int AVL_tree<U, T>::height(node <U, T> *node) const {
-    int32_t height = 0;
-
-    while (node) {
-        height += 1;
-        if (node->bf <= 0) {
-            node = node->left;
+    while (true) {
+        if (this->root->left) {
+            this->root = this->root->left;
+        } else if (this->root->right) {
+            this->root = this->root->right;
         } else {
-            node = node->right;
+            if (this->root->parent) {
+                auto *p = this->root->parent;
+                if (p->left == this->root) {
+                    p->left = nullptr;
+                } else {
+                    p->right = nullptr;
+                }
+                delete this->root;
+                this->root = p;
+            } else {
+                delete this->root;
+                this->root = nullptr;
+                break;
+            }
         }
     }
-
-    return height;
+    this->root = nullptr;
+    this->m_size = 0;
+    this->m_height = 0;
 }
 
 template<typename U, typename T>
 int AVL_tree<U, T>::height() const {
-    return height(this->root);
+    return m_height;
 }
 
 template<typename U, typename T>
@@ -430,6 +440,8 @@ void AVL_tree<U, T>::bf_recalculate_down(node <U, T> *node) {
                 rl(p);
             }
         }
+    } else {
+        m_height -= 1;
     }
 }
 
@@ -544,34 +556,6 @@ bool AVL_tree<U, T>::empty() const {
 template<typename U, typename T>
 int AVL_tree<U, T>::size() const {
     return this->m_size;
-}
-
-template<typename U, typename T>
-void AVL_tree<U, T>::clear() {
-    while (true) {
-        if (this->root->left) {
-            this->root = this->root->left;
-        } else if (this->root->right) {
-            this->root = this->root->right;
-        } else {
-            if (this->root->parent) {
-                auto *p = this->root->parent;
-                if (p->left == this->root) {
-                    p->left = nullptr;
-                } else {
-                    p->right = nullptr;
-                }
-                delete this->root;
-                this->root = p;
-            } else {
-                delete this->root;
-                this->root = nullptr;
-                break;
-            }
-        }
-    }
-    this->root = nullptr;
-    this->m_size = 0;
 }
 
 template<typename U, typename T>

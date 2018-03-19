@@ -24,9 +24,10 @@ public:
         std::cout.flush();
     }) const;
 
-    T &at(const U &key) throw(std::exception);
+    T &find(const U &key) throw(std::exception);
 
-    const T &at(const U &key) const throw(std::exception);
+    const T &find(const U &key) const throw(std::exception);
+
 
     T &operator[](const U &key);
 
@@ -70,7 +71,7 @@ private:
 
     void lr(node<U, T> *);
 
-    node<U, T> *find(const U &) const;
+    node<U, T> *find_node(const U &) const;
 
 };
 
@@ -459,8 +460,8 @@ int AVL_tree<U, T>::how_height(node <U, T> *node) const {
 }
 
 template<typename U, typename T>
-T &AVL_tree<U, T>::at(const U &key) throw(std::exception) {
-    auto node = find(key);
+T &AVL_tree<U, T>::find(const U &key) throw(std::exception) {
+    auto node = find_node(key);
     if (node) {
         return node->value;
     } else {
@@ -469,8 +470,8 @@ T &AVL_tree<U, T>::at(const U &key) throw(std::exception) {
 }
 
 template<typename U, typename T>
-const T &AVL_tree<U, T>::at(const U &key) const throw(std::exception) {
-    auto node = find(key);
+const T &AVL_tree<U, T>::find(const U &key) const throw(std::exception) {
+    auto node = find_node(key);
     if (node) {
         return node->value;
     } else {
@@ -561,7 +562,7 @@ int AVL_tree<U, T>::size() const {
 template<typename U, typename T>
 std::size_t AVL_tree<U, T>::erase(const U &key) {
 
-    auto node = find(key);
+    auto node = find_node(key);
     if (node) {
         take_out(node);
         delete node;
@@ -573,7 +574,7 @@ std::size_t AVL_tree<U, T>::erase(const U &key) {
 }
 
 template<typename U, typename T>
-node<U, T> *AVL_tree<U, T>::find(const U &key) const {
+node<U, T> *AVL_tree<U, T>::find_node(const U &key) const {
 
     auto node = this->root;
     while (true) {
